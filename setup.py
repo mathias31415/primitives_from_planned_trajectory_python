@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'save_planned_trajectory = primitives_from_planned_trajectory.save_planned_trajectory:main',
             'plot_saved_trajectory = primitives_from_planned_trajectory.plot_saved_trajectory:main',
+            'calculate_pose_from_joinpositions = primitives_from_planned_trajectory.calculate_pose_from_join_positions:main',
         ],
     },
 )

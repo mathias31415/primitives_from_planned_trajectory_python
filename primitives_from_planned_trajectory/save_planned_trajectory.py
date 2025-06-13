@@ -19,21 +19,15 @@
 import rclpy
 from rclpy.node import Node
 from moveit_msgs.msg import DisplayTrajectory
-from moveit_py.robot_model import RobotModel
-from moveit_py.robot_state import RobotState
 import csv
 from datetime import datetime
 import os
-import numpy as np
 
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
 class TrajectoryToCSV(Node):
     def __init__(self):
         super().__init__('trajectory_to_csv')
-
-        self.robot_model = RobotModel()
-        self.robot_model.load_robot_description()
 
         # Subscribe to MoveIt planned path topic
         self.subscription = self.create_subscription(
@@ -43,7 +37,7 @@ class TrajectoryToCSV(Node):
             10
         )
         self.saved = False
-        self.get_logger().info('Waiting for a planned trajectory from /display_planned_path... with pose')
+        self.get_logger().info('Waiting for a planned trajectory from /display_planned_path...')
 
     def callback(self, msg):
         if self.saved:
@@ -52,7 +46,6 @@ class TrajectoryToCSV(Node):
         self.get_logger().info('Planned trajectory received. Processing...')
 
         trajectory = msg.trajectory[0].joint_trajectory
-        robot_state = RobotState(self.robot_model)
 
         os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -69,10 +62,6 @@ class TrajectoryToCSV(Node):
                 fieldnames.append(f'{joint_name}_vel')
             for joint_name in trajectory.joint_names:
                 fieldnames.append(f'{joint_name}_acc')
-            # Add Cartesian pose fields
-            fieldnames.extend(['ee_pos_x', 'ee_pos_y', 'ee_pos_z',
-                            'ee_ori_x', 'ee_ori_y', 'ee_ori_z', 'ee_ori_w'])
-
 
             # Write CSV
             with open(filename, 'w', newline='') as csvfile:
@@ -97,28 +86,6 @@ class TrajectoryToCSV(Node):
                     if point.accelerations:
                         for name, acc in zip(trajectory.joint_names, point.accelerations):
                             row[f'{name}_acc'] = acc
-
-                    # Set joint positions in RobotState
-                    robot_state.set_variable_positions({
-                        name: pos for name, pos in zip(trajectory.joint_names, point.positions)
-                    })
-                    robot_state.update()  # wichtig, damit Kinematik aktualisiert wird
-
-                    # Forward Kinematics für Endeffektor-Link (z. B. "tool0")
-                    ee_link = "tool0"
-                    pose = robot_state.get_global_link_transform(ee_link)
-
-                    # Position und Orientierung extrahieren
-                    translation = pose.translation
-                    rotation = pose.rotation  # Quaternion (x, y, z, w)
-
-                    row['ee_pos_x'] = translation.x
-                    row['ee_pos_y'] = translation.y
-                    row['ee_pos_z'] = translation.z
-                    row['ee_ori_x'] = rotation.x
-                    row['ee_ori_y'] = rotation.y
-                    row['ee_ori_z'] = rotation.z
-                    row['ee_ori_w'] = rotation.w
 
                     writer.writerow(row)
 

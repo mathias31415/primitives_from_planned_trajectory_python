@@ -20,6 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'save_planned_trajectory = primitives_from_planned_trajectory.save_planned_trajectory:main',
+            'plot_saved_trajectory = primitives_from_planned_trajectory.plot_saved_trajectory:main',
         ],
     },
 )

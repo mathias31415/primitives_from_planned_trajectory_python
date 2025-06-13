@@ -25,16 +25,13 @@ ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur10e launch_rviz:=tru
 ## Save planned trajectory
 Start the python script with the following command:
 ```
-ros2 run primitives_from_planned_trajectory save_planned_trajectory.py
-```
-```
-python3 src/primitives_from_planned_trajectory/src/save_planned_trajectory.py
+ros2 run primitives_from_planned_trajectory save_planned_trajectory
 ```
 
 Then plan a trajectory in RViz with MoveIt by pressing `plan`. The python script will save the trajectory to a `trajectory_<date>_<time>.csv` file.
 
 ## Plot saved trajectory
 ```
-ros2 run primitives_from_planned_trajectory plot_saved_trajectory.py "<filename>"
+ros2 run primitives_from_planned_trajectory plot_saved_trajectory "<filename>"
 ```
 (The filename can either be passed as a command line argument or specified directly in the Python script.)

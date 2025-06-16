@@ -24,8 +24,9 @@ import sys
 
 # Default path and filename (used if no CLI argument is given)
 DEFAULT_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
-# DEFAULT_FILENAME = 'planned_trajectory_20250616_085458.csv'
-DEFAULT_FILENAME = 'planned_trajectory_20250616_091222.csv' # Pilz LIN
+DEFAULT_FILENAME = 'planned_trajectory_20250616_102657_pilz_lin.csv'
+# DEFAULT_FILENAME = 'planned_trajectory_20250616_102738_pilz_ptp.csv'
+# DEFAULT_FILENAME = 'planned_trajectory_20250616_102206_ompl_with_obstacle.csv'
 
 def load_trajectory_csv(filepath):
     with open(filepath, 'r') as f:

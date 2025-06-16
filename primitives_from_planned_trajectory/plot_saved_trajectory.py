@@ -24,9 +24,9 @@ import sys
 
 # Default path and filename (used if no CLI argument is given)
 DEFAULT_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
-DEFAULT_FILENAME = 'planned_trajectory_20250616_102657_pilz_lin.csv'
+# DEFAULT_FILENAME = 'planned_trajectory_20250616_102657_pilz_lin.csv'
 # DEFAULT_FILENAME = 'planned_trajectory_20250616_102738_pilz_ptp.csv'
-# DEFAULT_FILENAME = 'planned_trajectory_20250616_102206_ompl_with_obstacle.csv'
+DEFAULT_FILENAME = 'planned_trajectory_20250616_102206_ompl_with_obstacle.csv'
 
 def load_trajectory_csv(filepath):
     with open(filepath, 'r') as f:
@@ -38,6 +38,7 @@ def plot_trajectory(data, fieldnames, filepath):
     time = [float(row['time_from_start']) for row in data]
     num_steps = len(time)
     filename = os.path.basename(filepath)
+    basename, _ = os.path.splitext(filename)  # remove .csv
 
     pos_fields = [f for f in fieldnames if f.endswith('_pos')]
     vel_fields = [f for f in fieldnames if f.endswith('_vel')]
@@ -67,6 +68,7 @@ def plot_trajectory(data, fieldnames, filepath):
 
     axes[-1].set_xlabel('Time in seconds')
     plt.tight_layout(rect=[0, 0, 0.85, 0.95])
+    plt.savefig(f'{DEFAULT_DIR}/{basename}_timeplots.png')
     plt.show()
 
     if has_cart_ee:
@@ -102,6 +104,7 @@ def plot_trajectory(data, fieldnames, filepath):
         ax3d.set_zlim(mid_z - max_range, mid_z + max_range)
 
         plt.tight_layout()
+        plt.savefig(f'{DEFAULT_DIR}/{basename}_3dplot.png')
         plt.show()
 
 def main():

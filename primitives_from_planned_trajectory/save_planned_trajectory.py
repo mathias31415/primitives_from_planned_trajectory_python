@@ -26,15 +26,44 @@ import csv
 
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
+
+class FKClient:
+    def __init__(self, node: Node):
+        self.node = node
+        self.client = node.create_client(GetPositionFK, '/compute_fk')
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            node.get_logger().info('Waiting for /compute_fk service...')
+
+    def compute_fk(self, joint_names, joint_positions):
+        request = GetPositionFK.Request()
+        request.header.frame_id = 'base_link'
+        request.fk_link_names = ['tool0']
+        request.robot_state.joint_state.name = joint_names
+        request.robot_state.joint_state.position = joint_positions
+
+        future = self.client.call_async(request)
+        rclpy.spin_until_future_complete(self.node, future, timeout_sec=3.0)
+
+        if future.done():
+            result = future.result()
+            if result and result.error_code.val == 1:
+                return result.pose_stamped[0].pose
+            else:
+                self.node.get_logger().warn(f'FK error: code={result.error_code.val}')
+        else:
+            self.node.get_logger().error('FK call timed out')
+
+        return None
+
+
 class TrajectoryProcessor(Node):
     def __init__(self):
         super().__init__('trajectory_processor')
 
-        # Trajectory-Data
         self.joint_names = []
         self.trajectory_points = []
+        self.trajectory_received = False
 
-        # Subscriber
         self.subscription = self.create_subscription(
             DisplayTrajectory,
             '/display_planned_path',
@@ -42,12 +71,6 @@ class TrajectoryProcessor(Node):
             10
         )
 
-        # FK Client
-        self.fk_client = self.create_client(GetPositionFK, '/compute_fk')
-        while not self.fk_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('Waiting for /compute_fk service...')
-
-        self.trajectory_received = False
         self.get_logger().info('Node ready. Waiting for trajectory...')
 
     def trajectory_callback(self, msg):
@@ -60,29 +83,6 @@ class TrajectoryProcessor(Node):
         self.trajectory_received = True
 
         self.get_logger().info(f'Trajectory received with {len(self.trajectory_points)} points.')
-        self.get_logger().info('Stopping spin to proceed with FK processing...')
-
-
-def call_fk(node: Node, joint_names, joint_positions):
-    request = GetPositionFK.Request()
-    request.header.frame_id = 'base_link'
-    request.fk_link_names = ['tool0']
-    request.robot_state.joint_state.name = joint_names
-    request.robot_state.joint_state.position = joint_positions
-
-    future = node.fk_client.call_async(request)
-    rclpy.spin_until_future_complete(node, future, timeout_sec=3.0)
-
-    if future.done():
-        result = future.result()
-        if result and result.error_code.val == 1:
-            return result.pose_stamped[0].pose
-        else:
-            node.get_logger().warn(f'FK error: code={result.error_code.val}')
-    else:
-        node.get_logger().error('FK call timed out')
-
-    return None
 
 
 def write_to_csv(joint_names, points, fk_poses, filename):
@@ -143,16 +143,17 @@ def main():
         print('No trajectory received. Exiting.')
         return
 
-    # Calculate FK for each trajectory point
+    fk_client = FKClient(node)
+
     fk_poses = []
     for i, point in enumerate(node.trajectory_points):
-        pose = call_fk(node, node.joint_names, list(point.positions))
+        pose = fk_client.compute_fk(node.joint_names, list(point.positions))
         fk_poses.append(pose)
+
     print(f'Calculated FK for {len(fk_poses)} points.')
 
-    # Write to CSV
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    csv_name = f"trajectory_with_fk_{timestamp}.csv"
+    csv_name = f"planned_trajectory_{timestamp}.csv"
     write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_name)
 
     node.destroy_node()

@@ -44,10 +44,12 @@ def plot_trajectory(data, fieldnames, filepath):
     vel_fields = [f for f in fieldnames if f.endswith('_vel')]
     acc_fields = [f for f in fieldnames if f.endswith('_acc')]
 
-    cart_ee_fields = ['fk_x', 'fk_y', 'fk_z', 'fk_qx', 'fk_qy', 'fk_qz', 'fk_qw']
-    has_cart_ee = all(f in fieldnames for f in cart_ee_fields)
+    cart_pos_fields = ['fk_x', 'fk_y', 'fk_z']
+    cart_quat_fields = ['fk_qx', 'fk_qy', 'fk_qz', 'fk_qw']
+    has_cart_ee = all(f in fieldnames for f in cart_pos_fields + cart_quat_fields)
 
-    fig, axes = plt.subplots(4 if has_cart_ee else 3, 1, sharex=True, figsize=(12, 10 if has_cart_ee else 8))
+    n_rows = 5 if has_cart_ee else 3
+    fig, axes = plt.subplots(n_rows, 1, sharex=True, figsize=(12, 12 if has_cart_ee else 8))
     fig.suptitle(f'Trajectory: {filename}   |   Steps: {num_steps}', fontsize=14)
 
     def plot_category(ax, fields, title, ylabel):
@@ -59,12 +61,13 @@ def plot_trajectory(data, fieldnames, filepath):
         ax.grid(True)
         ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), borderaxespad=0)
 
-    plot_category(axes[0], pos_fields, 'Positions over Time', 'Position in rad')
-    plot_category(axes[1], vel_fields, 'Velocities over Time', 'Velocity in rad/s')
-    plot_category(axes[2], acc_fields, 'Accelerations over Time', 'Acceleration in rad/s²')
+    plot_category(axes[0], pos_fields, 'Joint Positions over Time', 'Position in rad')
+    plot_category(axes[1], vel_fields, 'Joint Velocities over Time', 'Velocity in rad/s')
+    plot_category(axes[2], acc_fields, 'Joint Accelerations over Time', 'Acceleration in rad/s²')
 
     if has_cart_ee:
-        plot_category(axes[3], cart_ee_fields, 'End-Effector Position over Time', 'Value')
+        plot_category(axes[3], cart_pos_fields, 'EE Cartesian Position over Time', 'Position in m')
+        plot_category(axes[4], cart_quat_fields, 'EE Orientation (Quaternion) over Time', 'Quaternion Value')
 
     axes[-1].set_xlabel('Time in seconds')
     plt.tight_layout(rect=[0, 0, 0.85, 0.95])
@@ -78,7 +81,7 @@ def plot_trajectory(data, fieldnames, filepath):
         y = [float(row['fk_y']) for row in data]
         z = [float(row['fk_z']) for row in data]
         ax3d.plot(x, y, z, marker='o', label='EE Path')
-        
+
         # mark start and end points
         ax3d.scatter(x[0], y[0], z[0], color='red', s=50, label='Start')
         ax3d.scatter(x[-1], y[-1], z[-1], color='green', s=50, label='End')
@@ -106,6 +109,7 @@ def plot_trajectory(data, fieldnames, filepath):
         plt.tight_layout()
         plt.savefig(f'{DEFAULT_DIR}/{basename}_3dplot.png')
         plt.show()
+
 
 def main():
     if len(sys.argv) > 1:

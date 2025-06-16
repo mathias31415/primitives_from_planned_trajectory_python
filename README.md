@@ -28,7 +28,7 @@ Start the python script with the following command:
 ros2 run primitives_from_planned_trajectory save_planned_trajectory
 ```
 
-Then plan a trajectory in RViz with MoveIt by pressing `plan`. The python script will save the trajectory to a `trajectory_<date>_<time>.csv` file.
+Then plan a trajectory in RViz with MoveIt by pressing `plan`. The python script will save the trajectory to a `planned_trajectory_<date>_<time>.csv` file.
 
 ## Plot saved trajectory
 ```

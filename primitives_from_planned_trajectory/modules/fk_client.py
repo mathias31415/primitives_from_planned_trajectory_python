@@ -26,10 +26,10 @@ class FKClient:
         while not self.client.wait_for_service(timeout_sec=1.0):
             node.get_logger().info('Waiting for /compute_fk service...')
 
-    def compute_fk(self, joint_names, joint_positions):
+    def compute_fk(self, joint_names, joint_positions, from_frame='base', to_link='tool0'):
         request = GetPositionFK.Request()
-        request.header.frame_id = 'base_link'
-        request.fk_link_names = ['tool0']
+        request.header.frame_id = from_frame
+        request.fk_link_names = [to_link]
         request.robot_state.joint_state.name = joint_names
         request.robot_state.joint_state.position = joint_positions
 

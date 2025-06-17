@@ -5,7 +5,7 @@ package_name = 'primitives_from_planned_trajectory'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(include=['primitives_from_planned_trajectory', 'primitives_from_planned_trajectory.*']),
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'save_planned_trajectory = primitives_from_planned_trajectory.save_planned_trajectory:main',
+            'process_trajectory_to_primitives = primitives_from_planned_trajectory.process_trajectory_to_primitives:main',
             'plot_saved_trajectory = primitives_from_planned_trajectory.plot_saved_trajectory:main',
         ],
     },

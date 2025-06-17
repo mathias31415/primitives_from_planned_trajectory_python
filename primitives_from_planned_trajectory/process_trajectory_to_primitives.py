@@ -19,12 +19,17 @@
 import rclpy
 import matplotlib.pyplot as plt
 from datetime import datetime
+# from .modules.planned_trajectory_reader import TrajectoryProcessor
+# from .modules.fk_client import FKClient
+# from .modules.csv_writer import write_to_csv
+# from .modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
+# from .modules.execute_motion_primitives import ExecuteMotionClient
 from modules.planned_trajectory_reader import TrajectoryProcessor
 from modules.fk_client import FKClient
 from modules.csv_writer import write_to_csv
 from modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
+from modules.execute_motion_primitives import ExecuteMotionClient
 
-#plt.close('all')
 def main():
     rclpy.init()
     node = TrajectoryProcessor()
@@ -41,7 +46,7 @@ def main():
     fk_client = FKClient(node)
     fk_poses = []
     for point in node.trajectory_points:
-        pose = fk_client.compute_fk(node.joint_names, list(point.positions))
+        pose = fk_client.compute_fk(node.joint_names, list(point.positions), from_frame='base', to_link='tool0')
         fk_poses.append(pose)
 
     # write trajectory and fk poses to CSV
@@ -50,20 +55,23 @@ def main():
     write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_filename_planned_traj)
 
     # calculate primitives and plot them
-    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01)
+    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.01, velocity=0.5, acceleration=0.5)
+    # print("Motion sequence message created:")
+    # print(motion_sequence_msg)
 
-    # ask user if they want to continue with primitive extraction
-    user_input = input("Do you want to continue with primitive extraction? (Type yes): ").strip().lower()
+    # ask user if they want to continue with primitive execution
+    user_input = input("Do you want to continue with primitive execution? (Type yes): ").strip().lower()
     if user_input == 'yes':
         # execute primitives with motion primitives forward controller
         plt.close('all')
-        print("Continuing with primitive extraction...")
+        print("Continuing with primitive execution...")
         csv_filename_executed_traj = f"trajectory_{timestamp}_executed.csv"
-        # print motion sequence message
-        print(motion_sequence_msg)
-        # TODO: Implement primitive extraction logic here
+        # TODO write executed trajectory to CSV
+        motion_node = ExecuteMotionClient()
+        motion_node.send_motion_sequence(motion_sequence_msg)
+        rclpy.spin(motion_node) # Spin until execution completes
     else:
-        print("Exiting without primitive extraction.")
+        print("Exiting without primitive execution.")
         plt.close('all')
 
     node.destroy_node()

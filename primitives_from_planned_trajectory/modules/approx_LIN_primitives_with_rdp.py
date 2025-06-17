@@ -24,9 +24,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from geometry_msgs.msg import PoseStamped
-from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionSequence
+from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionSequence, MotionArgument
 
-def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01):
+def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, velocity=0.01, acceleration=0.01):
     """
     Approximates motion primitives from Cartesian poses using RDP.
     Also plots the original vs. reduced path in 3D.
@@ -47,10 +47,14 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01):
     motion_sequence = MotionSequence()
     motion_primitives = []
 
-    for pt in reduced_points:
+    for pt in reduced_points[1:]:  # Skip the first point (current position)
         primitive = MotionPrimitive()
         primitive.type = MotionPrimitive.LINEAR_CARTESIAN
-        primitive.blend_radius = 0.0
+        primitive.blend_radius = blend_radius
+        primitive.additional_arguments = [
+            MotionArgument(argument_name="velocity", argument_value=velocity),
+            MotionArgument(argument_name="acceleration", argument_value=acceleration),
+        ]
 
         pose = PoseStamped()
         pose.pose.position.x = pt[0]
@@ -65,8 +69,17 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01):
 
         pose.pose.orientation = poses_list[idx].orientation
 
+        # TODO(mthias31415) replace with actual orientation
+        # pose.pose.orientation.x = 1.0
+        # pose.pose.orientation.y = 0.0
+        # pose.pose.orientation.z = 0.0
+        # pose.pose.orientation.w = 0.0
+
         primitive.poses.append(pose)
         motion_primitives.append(primitive)
+
+        # print the primitives
+        print(f"Added LIN: [x: {pose.pose.position.x}, y: {pose.pose.position.y}, z: {pose.pose.position.z}, qx: {pose.pose.orientation.x}, qy: {pose.pose.orientation.y}, qz: {pose.pose.orientation.z}, qw: {pose.pose.orientation.w}, blend_radius: {primitive.blend_radius}, velocity: {velocity}, acceleration: {acceleration}]\n")
 
 
     motion_sequence.motions = motion_primitives
@@ -99,5 +112,5 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01):
     plt.tight_layout()
     plt.show(block=False)
 
-    print(f"Reduced {len(points)} points to {len(reduced_points)} LIN primitives using RDP with epsilon={epsilon}")
+    print(f"Reduced {len(points)} trajectory points to {len(reduced_points)} LIN primitives using RDP with epsilon={epsilon}")
     return motion_sequence

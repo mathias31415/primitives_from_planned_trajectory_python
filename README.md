@@ -31,7 +31,6 @@ Start the python script with the following command:
 ```
 ros2 run primitives_from_planned_trajectory process_trajectory_to_primitives
 ```
-
 Then plan a trajectory in RViz with MoveIt by pressing `plan`. The python script will:
     1. Read the planned trajectory.
     2. Calculate the endefector pose for every point in the trajectory using the `/compute_fk` service.
@@ -42,8 +41,14 @@ Then plan a trajectory in RViz with MoveIt by pressing `plan`. The python script
     7. Execution using the [motion_primitives_forward_controller](https://github.com/b-robotized-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller).
     8. Save the executed trajectory to compare it with the planned trajectory.
 
-## Plot saved trajectory
+## Plot saved planned trajectory
 ```
-ros2 run primitives_from_planned_trajectory plot_saved_trajectory "<filename>"
+ros2 run primitives_from_planned_trajectory plot_saved_planned_trajectory "<filename>"
+```
+(The filename can either be passed as a command line argument or specified directly in the Python script.)
+
+## Plot saved executed trajectory
+```
+ros2 run primitives_from_planned_trajectory plot_saved_executed_trajectory "<filename>"
 ```
 (The filename can either be passed as a command line argument or specified directly in the Python script.)

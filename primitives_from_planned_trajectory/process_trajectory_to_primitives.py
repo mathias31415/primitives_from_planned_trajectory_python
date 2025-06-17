@@ -19,16 +19,23 @@
 import rclpy
 import matplotlib.pyplot as plt
 from datetime import datetime
+
 # from .modules.planned_trajectory_reader import TrajectoryProcessor
 # from .modules.fk_client import FKClient
 # from .modules.csv_writer import write_to_csv
 # from .modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
 # from .modules.execute_motion_primitives import ExecuteMotionClient
+# from .modules.joint_state_logger import JointStateLogger
+
+# To run with play button in VSCode instead of ros2 run
 from modules.planned_trajectory_reader import TrajectoryProcessor
 from modules.fk_client import FKClient
 from modules.csv_writer import write_to_csv
 from modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
 from modules.execute_motion_primitives import ExecuteMotionClient
+from modules.joint_state_logger import JointStateLogger
+
+SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
 def main():
     rclpy.init()
@@ -52,7 +59,7 @@ def main():
     # write trajectory and fk poses to CSV
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     csv_filename_planned_traj = f"trajectory_{timestamp}_planned.csv"
-    write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_filename_planned_traj)
+    write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_filename_planned_traj, directory=SAVE_DIR)
 
     # calculate primitives and plot them
     motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.1, velocity=0.5, acceleration=0.5)
@@ -60,20 +67,29 @@ def main():
     # ask user if they want to continue with primitive execution
     user_input = input("Do you want to continue with primitive execution? (Type yes): ").strip().lower()
     if user_input == 'yes':
-        # execute primitives with motion primitives forward controller
         plt.close('all')
         print("Continuing with primitive execution...")
-        csv_filename_executed_traj = f"trajectory_{timestamp}_executed.csv"
-        # TODO write executed trajectory to CSV
+
         motion_node = ExecuteMotionClient()
+
+        # save executed trajectory to CSV
+        csv_filename_executed_traj = f"trajectory_{timestamp}_executed.csv"
+        joint_state_logger = JointStateLogger(motion_node, csv_filename_executed_traj, directory=SAVE_DIR)
+
+        # execute primitives with motion primitives forward controller
         motion_node.send_motion_sequence(motion_sequence_msg)
-        rclpy.spin(motion_node) # Spin until execution completes
+        
+        try:
+            rclpy.spin(motion_node)  # Wait until motion is done
+        finally:
+            joint_state_logger.stop()
     else:
         print("Exiting without primitive execution.")
         plt.close('all')
 
     node.destroy_node()
-    rclpy.shutdown()
+    if rclpy.ok():
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

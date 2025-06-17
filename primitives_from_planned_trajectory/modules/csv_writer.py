@@ -19,9 +19,7 @@
 import os
 import csv
 
-SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
-
-def write_to_csv(joint_names, points, fk_poses, filename):
+def write_to_csv(joint_names, points, fk_poses, filename, directory=None):
     fieldnames = ['time_from_start']
     for name in joint_names:
         fieldnames.append(f'{name}_pos')
@@ -31,8 +29,8 @@ def write_to_csv(joint_names, points, fk_poses, filename):
         fieldnames.append(f'{name}_acc')
     fieldnames += ['fk_x', 'fk_y', 'fk_z', 'fk_qx', 'fk_qy', 'fk_qz', 'fk_qw']
 
-    os.makedirs(SAVE_DIR, exist_ok=True)
-    filepath = os.path.join(SAVE_DIR, filename)
+    os.makedirs(directory, exist_ok=True)
+    filepath = os.path.join(directory, filename)
 
     with open(filepath, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)

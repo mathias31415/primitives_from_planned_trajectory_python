@@ -16,8 +16,6 @@
 #
 # Authors: Mathias Fuhrer
 
-# modules/primitive_extractor.py
-
 import numpy as np
 from rdp import rdp
 import matplotlib.pyplot as plt
@@ -67,13 +65,10 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
             raise ValueError(f"Reduced point {pt} not found in original points!")
         idx = matches[0]
 
-        pose.pose.orientation = poses_list[idx].orientation
-
-        # TODO(mthias31415) replace with actual orientation
-        # pose.pose.orientation.x = 1.0
-        # pose.pose.orientation.y = 0.0
-        # pose.pose.orientation.z = 0.0
-        # pose.pose.orientation.w = 0.0
+        pose.pose.orientation.x = poses_list[idx].orientation.x
+        pose.pose.orientation.y = poses_list[idx].orientation.y
+        pose.pose.orientation.z = poses_list[idx].orientation.z
+        pose.pose.orientation.w = poses_list[idx].orientation.w
 
         primitive.poses.append(pose)
         motion_primitives.append(primitive)
@@ -112,5 +107,5 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
     plt.tight_layout()
     plt.show(block=False)
 
-    print(f"Reduced {len(points)} trajectory points to {len(reduced_points)} LIN primitives using RDP with epsilon={epsilon}")
+    print(f"Reduced {len(points)} trajectory points to {len(reduced_points)-1} LIN primitives using RDP with epsilon={epsilon}")
     return motion_sequence

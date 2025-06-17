@@ -55,9 +55,7 @@ def main():
     write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_filename_planned_traj)
 
     # calculate primitives and plot them
-    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.01, velocity=0.5, acceleration=0.5)
-    # print("Motion sequence message created:")
-    # print(motion_sequence_msg)
+    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.1, velocity=0.5, acceleration=0.5)
 
     # ask user if they want to continue with primitive execution
     user_input = input("Do you want to continue with primitive execution? (Type yes): ").strip().lower()

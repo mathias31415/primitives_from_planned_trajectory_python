@@ -26,19 +26,13 @@ from sensor_msgs.msg import JointState
 
 
 class JointStateLogger:
-    def __init__(self, node, filename, directory=None, topic_name='/joint_states'):
+    def __init__(self, node, filepath, topic_name='/joint_states'):
         self.node = node
-        self.filename = filename
+        self.filepath = filepath
         self.topic_name = topic_name
         self.joint_names = []
         self._stop_event = Event()
         self._header_written = False
-
-        if directory:
-            os.makedirs(directory, exist_ok=True)
-            self.filepath = os.path.join(directory, filename)
-        else:
-            self.filepath = filename
 
         self._file = open(self.filepath, mode='w', newline='')
         self._writer = csv.writer(self._file)
@@ -50,7 +44,7 @@ class JointStateLogger:
             10
         )
 
-        self.node.get_logger().info(f"Started recording joint states to {self.filename}")
+        self.node.get_logger().info(f"Started recording joint states to {self.filepath}")
 
     def _callback(self, msg):
         if not self._header_written:

@@ -25,7 +25,7 @@ from scipy.spatial.transform import Rotation as R
 from geometry_msgs.msg import PoseStamped, Pose
 from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionSequence, MotionArgument
 
-def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, velocity=0.01, acceleration=0.01):
+def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, velocity=0.01, acceleration=0.01, plot_filepath=None):
     """
     Approximates motion primitives from Cartesian poses using RDP.
     Also plots the original vs. reduced path in 3D.
@@ -130,6 +130,11 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
     ax3d.set_zlim(mid_z - max_range, mid_z + max_range)
 
     plt.tight_layout()
+
+    if plot_filepath:
+        plt.savefig(plot_filepath, dpi=300)
+        print(f"Plot saved to {plot_filepath}")
+        
     plt.show(block=False)
 
     print(f"Reduced {len(points)} trajectory points to {len(reduced_points)-1} LIN primitives using RDP with epsilon={epsilon}")

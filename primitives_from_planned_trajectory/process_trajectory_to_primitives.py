@@ -61,11 +61,12 @@ def main():
 
     # write trajectory and fk poses to CSV
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    csv_filename_planned_traj = f"trajectory_{timestamp}_planned.csv"
-    write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_filename_planned_traj, directory=SAVE_DIR)
+    csv_filepath_planned_traj = f"{SAVE_DIR}/trajectory_{timestamp}_planned.csv"
+    write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_filepath_planned_traj)
 
     # calculate primitives and plot them
-    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.1, velocity=0.5, acceleration=0.5)
+    plot_filepath_simplified_with_rdp = f"{SAVE_DIR}/trajectory_{timestamp}_simplified_with_rdp.png"
+    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.01, velocity=0.5, acceleration=0.5, plot_filepath=plot_filepath_simplified_with_rdp)
 
     # extract poses from motion sequence message for visualization
     all_poses = [
@@ -93,8 +94,8 @@ def main():
         motion_node = ExecuteMotionClient()
 
         # save executed trajectory to CSV
-        csv_filename_executed_traj = f"trajectory_{timestamp}_executed.csv"
-        joint_state_logger = JointStateLogger(motion_node, csv_filename_executed_traj, directory=SAVE_DIR)
+        csv_filepath_executed_traj = f"{SAVE_DIR}/trajectory_{timestamp}_executed.csv"
+        joint_state_logger = JointStateLogger(motion_node, csv_filepath_executed_traj)
 
         # execute primitives with motion primitives forward controller
         motion_node.send_motion_sequence(motion_sequence_msg)

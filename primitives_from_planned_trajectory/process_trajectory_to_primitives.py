@@ -80,9 +80,8 @@ def main():
         poses=all_poses,
         frame_id="base",
         marker_ns="rdp_primitives",
-        marker_type=1,
-        scale=(0.01, 0.01, 0.01),
-        color=(0.0, 0.8, 0.2, 1.0),  # grün
+        axis_length=0.1,
+        axis_width=0.01
     )
 
     # ask user if they want to continue with primitive execution

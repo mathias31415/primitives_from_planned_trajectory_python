@@ -19,6 +19,7 @@
 import rclpy
 import matplotlib.pyplot as plt
 from datetime import datetime
+# from geometry_msgs.msg import Pose
 
 # from .modules.planned_trajectory_reader import TrajectoryProcessor
 # from .modules.fk_client import FKClient
@@ -26,6 +27,7 @@ from datetime import datetime
 # from .modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
 # from .modules.execute_motion_primitives import ExecuteMotionClient
 # from .modules.joint_state_logger import JointStateLogger
+# from .modules.marker_publisher import publish_poses_to_rviz
 
 # To run with play button in VSCode instead of ros2 run
 from modules.planned_trajectory_reader import TrajectoryProcessor
@@ -34,6 +36,7 @@ from modules.csv_writer import write_to_csv
 from modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
 from modules.execute_motion_primitives import ExecuteMotionClient
 from modules.joint_state_logger import JointStateLogger
+from modules.marker_publisher import publish_poses_to_rviz
 
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
@@ -63,6 +66,24 @@ def main():
 
     # calculate primitives and plot them
     motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.1, velocity=0.5, acceleration=0.5)
+
+    # extract poses from motion sequence message for visualization
+    all_poses = [
+        pose_stamped.pose
+        for primitive in motion_sequence_msg.motions
+        for pose_stamped in primitive.poses
+    ]
+
+    # publish poses to topic to visualize in RViz
+    publish_poses_to_rviz(
+        node=node,
+        poses=all_poses,
+        frame_id="base",
+        marker_ns="rdp_primitives",
+        marker_type=1,
+        scale=(0.01, 0.01, 0.01),
+        color=(0.0, 0.8, 0.2, 1.0),  # grün
+    )
 
     # ask user if they want to continue with primitive execution
     user_input = input("Do you want to continue with primitive execution? (Type yes): ").strip().lower()

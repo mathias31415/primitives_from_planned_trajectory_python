@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial.transform import Rotation as R
 
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Pose
 from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionSequence, MotionArgument
 
 def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, velocity=0.01, acceleration=0.01):
@@ -94,7 +94,7 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
     ax3d.scatter(x[-1], y[-1], z[-1], color='green', s=50, label='End')
 
     # show orientation arrows at reduced points
-    arrow_len = 0.1
+    arrow_len = 0.05
     for i, pt in enumerate(reduced_points):
         matches = np.where((points == pt).all(axis=1))[0]
         if len(matches) == 0:

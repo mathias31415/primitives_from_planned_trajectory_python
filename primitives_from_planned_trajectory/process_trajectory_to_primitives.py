@@ -19,24 +19,23 @@
 import rclpy
 import matplotlib.pyplot as plt
 from datetime import datetime
-# from geometry_msgs.msg import Pose
 
-# from .modules.planned_trajectory_reader import TrajectoryProcessor
-# from .modules.fk_client import FKClient
-# from .modules.csv_writer import write_to_csv
-# from .modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
-# from .modules.execute_motion_primitives import ExecuteMotionClient
-# from .modules.joint_state_logger import JointStateLogger
-# from .modules.marker_publisher import publish_poses_to_rviz
+from .modules.planned_trajectory_reader import TrajectoryProcessor
+from .modules.fk_client import FKClient
+from .modules.csv_writer import write_to_csv
+from .modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
+from .modules.execute_motion_primitives import ExecuteMotionClient
+from .modules.joint_state_logger import JointStateLogger
+from .modules.marker_publisher import publish_poses_to_rviz
 
 # To run with play button in VSCode instead of ros2 run
-from modules.planned_trajectory_reader import TrajectoryProcessor
-from modules.fk_client import FKClient
-from modules.csv_writer import write_to_csv
-from modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
-from modules.execute_motion_primitives import ExecuteMotionClient
-from modules.joint_state_logger import JointStateLogger
-from modules.marker_publisher import publish_poses_to_rviz
+# from modules.planned_trajectory_reader import TrajectoryProcessor
+# from modules.fk_client import FKClient
+# from modules.csv_writer import write_to_csv
+# from modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
+# from modules.execute_motion_primitives import ExecuteMotionClient
+# from modules.joint_state_logger import JointStateLogger
+# from modules.marker_publisher import publish_poses_to_rviz
 
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
@@ -66,7 +65,7 @@ def main():
 
     # calculate primitives and plot them
     plot_filepath_simplified_with_rdp = f"{SAVE_DIR}/trajectory_{timestamp}_simplified_with_rdp.png"
-    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.01, velocity=0.5, acceleration=0.5, plot_filepath=plot_filepath_simplified_with_rdp)
+    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.1, velocity=0.5, acceleration=0.5, plot_filepath=plot_filepath_simplified_with_rdp)
 
     # extract poses from motion sequence message for visualization
     all_poses = [

@@ -20,6 +20,7 @@ import numpy as np
 from rdp import rdp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.spatial.transform import Rotation as R
 
 from geometry_msgs.msg import PoseStamped
 from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionSequence, MotionArgument
@@ -73,14 +74,15 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
         primitive.poses.append(pose)
         motion_primitives.append(primitive)
 
-        # print the primitives
-        print(f"Added LIN: [x: {pose.pose.position.x}, y: {pose.pose.position.y}, z: {pose.pose.position.z}, qx: {pose.pose.orientation.x}, qy: {pose.pose.orientation.y}, qz: {pose.pose.orientation.z}, qw: {pose.pose.orientation.w}, blend_radius: {primitive.blend_radius}, velocity: {velocity}, acceleration: {acceleration}]\n")
-
+        print(f"Added LIN: [x: {pose.pose.position.x}, y: {pose.pose.position.y}, z: {pose.pose.position.z}, "
+              f"qx: {pose.pose.orientation.x}, qy: {pose.pose.orientation.y}, "
+              f"qz: {pose.pose.orientation.z}, qw: {pose.pose.orientation.w}, "
+              f"blend_radius: {primitive.blend_radius}, velocity: {velocity}, acceleration: {acceleration}]\n")
 
     motion_sequence.motions = motion_primitives
 
     # 3D Plot for x,y,z coordinates
-    fig3d = plt.figure(figsize=(8, 6))
+    fig3d = plt.figure(figsize=(10, 8))
     ax3d = fig3d.add_subplot(111, projection='3d')
 
     x, y, z = points[:, 0], points[:, 1], points[:, 2]
@@ -91,10 +93,33 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
     ax3d.scatter(x[0], y[0], z[0], color='red', s=50, label='Start')
     ax3d.scatter(x[-1], y[-1], z[-1], color='green', s=50, label='End')
 
+    # show orientation arrows at reduced points
+    arrow_len = 0.1
+    for i, pt in enumerate(reduced_points):
+        matches = np.where((points == pt).all(axis=1))[0]
+        if len(matches) == 0:
+            continue
+        idx = matches[0]
+        pose = poses_list[idx]
+
+        quat = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
+        rot = R.from_quat(quat)
+
+        x_axis = rot.apply([1, 0, 0])
+        y_axis = rot.apply([0, 1, 0])
+        z_axis = rot.apply([0, 0, 1])
+
+        ax3d.quiver(pt[0], pt[1], pt[2], x_axis[0], x_axis[1], x_axis[2],
+                    length=arrow_len, color='r', normalize=True, label='_nolegend_')
+        ax3d.quiver(pt[0], pt[1], pt[2], y_axis[0], y_axis[1], y_axis[2],
+                    length=arrow_len, color='g', normalize=True, label='_nolegend_')
+        ax3d.quiver(pt[0], pt[1], pt[2], z_axis[0], z_axis[1], z_axis[2],
+                    length=arrow_len, color='b', normalize=True, label='_nolegend_')
+
     ax3d.set_xlabel('X')
     ax3d.set_ylabel('Y')
     ax3d.set_zlabel('Z')
-    ax3d.set_title('3D Trajectory with RDP Simplification (Warning: Orientation not shown)')
+    ax3d.set_title('3D Trajectory with RDP Simplification')
     ax3d.legend()
 
     # Equal scaling

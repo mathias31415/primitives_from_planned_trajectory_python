@@ -24,7 +24,7 @@ import numpy as np
 from tf_transformations import quaternion_matrix
 
 
-def publish_poses_to_rviz(
+def publish_pose_markers_to_rviz(
     node: Node,
     poses: list[Pose],
     frame_id: str = "world",
@@ -95,3 +95,34 @@ def publish_poses_to_rviz(
 
     marker_pub.publish(marker_array)
     node.get_logger().info(f"Published {len(marker_array.markers)} coordinate frames to /visualization_marker_array.")
+
+
+def delete_pose_markers(
+    node: Node,
+    num_markers: int,
+    frame_id: str = "world",
+    marker_ns: str = "pose_axes",
+):
+        """
+        Deletes previously published pose axis markers.
+
+        Args:
+            node (Node): ROS2 node instance.
+            num_markers (int): Number of markers previously published.
+            frame_id (str): Reference frame for the marker.
+            marker_ns (str): Namespace of the markers to delete.
+        """
+        marker_array = MarkerArray()
+        marker_pub = node.create_publisher(MarkerArray, "/visualization_marker_array", 10)
+
+        for marker_id in range(num_markers):
+            marker = Marker()
+            marker.header.frame_id = frame_id
+            marker.header.stamp = node.get_clock().now().to_msg()
+            marker.ns = marker_ns
+            marker.id = marker_id
+            marker.action = Marker.DELETE
+            marker_array.markers.append(marker)
+
+        marker_pub.publish(marker_array)
+        node.get_logger().info(f"Deleted {num_markers} markers from /visualization_marker_array.")

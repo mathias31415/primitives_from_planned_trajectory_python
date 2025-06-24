@@ -38,7 +38,7 @@ from modules.csv_writer import write_to_csv
 from modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp, approx_PTP_primitives_with_rdp
 from modules.execute_motion_primitives import ExecuteMotionClient
 from modules.joint_state_logger import JointStateLogger
-from modules.marker_publisher import publish_poses_to_rviz
+from modules.marker_publisher import publish_pose_markers_to_rviz, delete_pose_markers
 
 from compare_planned_and_executed_traj import compare_and_plot_trajectories
 
@@ -53,7 +53,7 @@ def handle_ptp_approximation(joint_positions, joint_names, fk_poses, plot_path):
     motion_sequence_msg = approx_PTP_primitives_with_rdp(
         joint_positions=joint_positions,
         joint_names=joint_names,
-        epsilon=0.01,
+        epsilon=0.001,
         blend_radius=0.1,
         velocity=0.5,
         acceleration=0.5,
@@ -138,7 +138,7 @@ def main():
     )
 
     if reduced_poses:
-        publish_poses_to_rviz(
+        publish_pose_markers_to_rviz(
             node=node,
             poses=reduced_poses,
             frame_id="base",
@@ -179,6 +179,12 @@ def main():
         else:
             print("Invalid input.")
 
+    delete_pose_markers(
+            node=node,
+            num_markers=len(reduced_poses),
+            frame_id="base",
+            marker_ns="motion_primitive_goal_poses",
+        )
 
     node.destroy_node()
     if rclpy.ok():

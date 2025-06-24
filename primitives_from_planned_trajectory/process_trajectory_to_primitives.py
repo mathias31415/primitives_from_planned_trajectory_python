@@ -23,24 +23,25 @@ from datetime import datetime
 from industrial_robot_motion_interfaces.msg import MotionPrimitive
 from geometry_msgs.msg import Pose
 
-# from .modules.planned_trajectory_reader import TrajectoryProcessor
-# from .modules.fk_client import FKClient
-# from .modules.csv_writer import write_to_csv
-# from .modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp, approx_PTP_primitives_with_rdp
-# from .modules.execute_motion_primitives import ExecuteMotionClient
-# from .modules.joint_state_logger import JointStateLogger
-# from .modules.marker_publisher import publish_poses_to_rviz
+from .modules.planned_trajectory_reader import TrajectoryProcessor
+from .modules.fk_client import FKClient
+from .modules.csv_writer import write_to_csv
+from .modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp, approx_PTP_primitives_with_rdp
+from .modules.execute_motion_primitives import ExecuteMotionClient
+from .modules.joint_state_logger import JointStateLogger
+from .modules.marker_publisher import publish_pose_markers_to_rviz, delete_pose_markers
+from .compare_planned_and_executed_traj import compare_and_plot_trajectories
+
 
 # To run with play button in VSCode instead of ros2 run
-from modules.planned_trajectory_reader import TrajectoryProcessor
-from modules.fk_client import FKClient
-from modules.csv_writer import write_to_csv
-from modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp, approx_PTP_primitives_with_rdp
-from modules.execute_motion_primitives import ExecuteMotionClient
-from modules.joint_state_logger import JointStateLogger
-from modules.marker_publisher import publish_pose_markers_to_rviz, delete_pose_markers
-
-from compare_planned_and_executed_traj import compare_and_plot_trajectories
+# from modules.planned_trajectory_reader import TrajectoryProcessor
+# from modules.fk_client import FKClient
+# from modules.csv_writer import write_to_csv
+# from modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp, approx_PTP_primitives_with_rdp
+# from modules.execute_motion_primitives import ExecuteMotionClient
+# from modules.joint_state_logger import JointStateLogger
+# from modules.marker_publisher import publish_pose_markers_to_rviz, delete_pose_markers
+# from compare_planned_and_executed_traj import compare_and_plot_trajectories
 
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
@@ -152,6 +153,12 @@ def main():
 
         if user_input in ('y', 'yes'):
             plt.close('all')
+            delete_pose_markers(
+                node=node,
+                num_markers=len(reduced_poses),
+                frame_id="base",
+                marker_ns="motion_primitive_goal_poses",
+            )
             print("Starting execution of motion primitives...")
 
             motion_node = ExecuteMotionClient()
@@ -168,23 +175,21 @@ def main():
                 # compare planned and executed trajectories
                 joint_pos_names = [name + '_pos' for name in node.joint_names]
                 compare_and_plot_trajectories(filepath_planned=csv_filepath_planned_traj, filepath_executed=csv_filepath_executed_traj, joint_pos_names=joint_pos_names, n_points=100)
-
             break
 
         elif user_input in ('', 'n', 'no'):
             print("Exiting without primitive execution.")
             plt.close('all')
+            delete_pose_markers(
+                node=node,
+                num_markers=len(reduced_poses),
+                frame_id="base",
+                marker_ns="motion_primitive_goal_poses",
+            )
             break
 
         else:
             print("Invalid input.")
-
-    delete_pose_markers(
-            node=node,
-            num_markers=len(reduced_poses),
-            frame_id="base",
-            marker_ns="motion_primitive_goal_poses",
-        )
 
     node.destroy_node()
     if rclpy.ok():

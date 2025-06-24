@@ -17,6 +17,7 @@ setup(
     install_requires=[
         'setuptools',
         'industrial_robot_motion_interfaces',
+        'rdp',
     ],
     zip_safe=True,
     maintainer='Mathias Fuhrer',

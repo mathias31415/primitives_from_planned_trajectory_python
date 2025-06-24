@@ -17,7 +17,7 @@
 # Authors: Mathias Fuhrer
 
 import numpy as np
-from rdp import rdp
+from rdp import rdp, pldist_nd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial.transform import Rotation as R
@@ -46,7 +46,7 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
     motion_sequence = MotionSequence()
     motion_primitives = []
 
-    for pt in reduced_points[1:]:  # Skip the first point (current position)
+    for pt in reduced_points[1:]:  # Skip the first point (start position)
         primitive = MotionPrimitive()
         primitive.type = MotionPrimitive.LINEAR_CARTESIAN
         primitive.blend_radius = blend_radius
@@ -74,7 +74,7 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
         primitive.poses.append(pose)
         motion_primitives.append(primitive)
 
-        print(f"Added LIN: [x: {pose.pose.position.x}, y: {pose.pose.position.y}, z: {pose.pose.position.z}, "
+        print(f"Added LINEAR_CARTESIAN (LIN): [x: {pose.pose.position.x}, y: {pose.pose.position.y}, z: {pose.pose.position.z}, "
               f"qx: {pose.pose.orientation.x}, qy: {pose.pose.orientation.y}, "
               f"qz: {pose.pose.orientation.z}, qw: {pose.pose.orientation.w}, "
               f"blend_radius: {primitive.blend_radius}, velocity: {velocity}, acceleration: {acceleration}]\n")
@@ -119,7 +119,7 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
     ax3d.set_xlabel('X')
     ax3d.set_ylabel('Y')
     ax3d.set_zlabel('Z')
-    ax3d.set_title('3D Trajectory with RDP Simplification')
+    ax3d.set_title('Cartesian trajectory before and after RDP simplification for LIN primitives')
     ax3d.legend()
 
     # Equal scaling
@@ -139,3 +139,82 @@ def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, v
 
     print(f"Reduced {len(points)} trajectory points to {len(reduced_points)-1} LIN primitives using RDP with epsilon={epsilon}")
     return motion_sequence
+
+
+def approx_PTP_primitives_with_rdp(joint_positions, joint_names, epsilon=0.01, blend_radius=0.0, velocity=0.01, acceleration=0.01, plot_filepath=None):
+    """
+    Approximates PTP joint motion primitives using Ramer-Douglas-Peucker Algorithm (RDP)
+    and plots each joint's trajectory before and after simplification.
+
+    Args:
+        joint_positions (List[np.ndarray]): List of joint position vectors (shape: dof).
+        joint_names (List[str]): List of joint names corresponding to the joint positions.
+        epsilon (float): RDP simplification epsilon.
+        plot_filepath (str, optional): If provided, save the plot to this path.
+
+    Returns:
+        MotionSequence: ROS2 message containing motion primitives.
+    """
+    points = np.array(joint_positions)
+    reduced_points = rdp(points, epsilon=epsilon, dist=pldist_nd)
+
+    motion_sequence = MotionSequence()
+    motion_primitives = []
+
+    for pt in reduced_points[1:]:  # Skip the first point (start position)
+        primitive = MotionPrimitive()
+        primitive.type = MotionPrimitive.LINEAR_JOINT
+        primitive.blend_radius = blend_radius
+        primitive.additional_arguments = [
+            MotionArgument(argument_name="velocity", argument_value=velocity),
+            MotionArgument(argument_name="acceleration", argument_value=acceleration),
+        ]
+        primitive.joint_positions = pt.tolist()
+        motion_primitives.append(primitive)
+
+        print(f"Added LINEAR_JOINT (PTP): joints={pt.tolist()}, blend_radius={blend_radius}, "
+              f"velocity={velocity}, acceleration={acceleration}")
+
+    motion_sequence.motions = motion_primitives
+
+    print(f"Reduced {len(points)} joint positions to {len(reduced_points)-1} PTP primitives using RDP with epsilon={epsilon}")
+
+    # Plot Joint Axes
+    num_joints = points.shape[1]
+    fig, axs = plt.subplots(num_joints, 1, figsize=(10, 2.5 * num_joints), sharex=True)
+
+    if num_joints == 1:
+        axs = [axs]  # make iterable
+
+    reduced_indices = []
+    for pt in reduced_points:
+        match = np.where((points == pt).all(axis=1))[0]
+        reduced_indices.append(match[0] if len(match) > 0 else None)
+
+    for i in range(num_joints):
+        axs[i].plot(range(len(points)), points[:, i], marker='o', color='blue', alpha=0.5, label='Original')
+        axs[i].plot(reduced_indices, reduced_points[:, i], marker='o', color='orange', label='Simplified with RDP')
+
+        axs[i].set_ylim([-3.2, 3.2])
+        axs[i].set_ylabel("Joint position in rad")
+        title = joint_names[i] if i < len(joint_names) else f"Joint {i + 1}"
+        axs[i].set_title(title, pad=10)
+        axs[i].grid(True)
+
+    axs[-1].set_xlabel("Trajectory point index")
+
+    # Legend only once, below the last plot, right aligned
+    handles, labels = axs[-1].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower right', bbox_to_anchor=(0.98, 0.01))
+
+    fig.suptitle('Joint-trajectories before and after RDP simplification for PTP primitives', fontsize=14)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+    if plot_filepath:
+        plt.savefig(plot_filepath, dpi=300)
+        print(f"PTP joint plot saved to {plot_filepath}")
+
+    plt.show(block=False)
+
+    return motion_sequence
+

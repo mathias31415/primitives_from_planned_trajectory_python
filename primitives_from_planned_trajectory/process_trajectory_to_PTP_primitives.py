@@ -18,12 +18,13 @@
 
 import rclpy
 import matplotlib.pyplot as plt
+import numpy as np
 from datetime import datetime
 
 # from .modules.planned_trajectory_reader import TrajectoryProcessor
 # from .modules.fk_client import FKClient
 # from .modules.csv_writer import write_to_csv
-# from .modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp
+# from .modules.approx_primitives_with_rdp import approx_PTP_primitives_with_rdp
 # from .modules.execute_motion_primitives import ExecuteMotionClient
 # from .modules.joint_state_logger import JointStateLogger
 # from .modules.marker_publisher import publish_poses_to_rviz
@@ -32,10 +33,13 @@ from datetime import datetime
 from modules.planned_trajectory_reader import TrajectoryProcessor
 from modules.fk_client import FKClient
 from modules.csv_writer import write_to_csv
-from modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp
+from modules.approx_primitives_with_rdp import approx_PTP_primitives_with_rdp
 from modules.execute_motion_primitives import ExecuteMotionClient
 from modules.joint_state_logger import JointStateLogger
 from modules.marker_publisher import publish_poses_to_rviz
+
+from industrial_robot_motion_interfaces.msg import MotionPrimitive
+from geometry_msgs.msg import Pose
 
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
@@ -43,7 +47,7 @@ def main():
     rclpy.init()
     node = TrajectoryProcessor()
 
-    # Get planned trajectory
+    # Wait for planned trajectory
     while rclpy.ok() and not node.trajectory_received:
         rclpy.spin_once(node, timeout_sec=0.1)
 
@@ -51,40 +55,63 @@ def main():
         print('No trajectory received. Exiting.')
         return
 
-    # calculate forward kinematics for each trajectory point
+    joint_positions = [list(point.positions) for point in node.trajectory_points]
+
+    # Calculate FK for all joint positions
     fk_client = FKClient(node)
     fk_poses = []
-    for point in node.trajectory_points:
-        pose = fk_client.compute_fk(node.joint_names, list(point.positions), from_frame='base', to_link='tool0')
+    for jp in joint_positions:
+        pose = fk_client.compute_fk(node.joint_names, jp, from_frame='base', to_link='tool0')
         fk_poses.append(pose)
 
-    # write trajectory and fk poses to CSV
+    # Save CSV with joint trajectory and FK poses
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     csv_filepath_planned_traj = f"{SAVE_DIR}/trajectory_{timestamp}_planned.csv"
     write_to_csv(node.joint_names, node.trajectory_points, fk_poses, csv_filepath_planned_traj)
 
-    # calculate primitives and plot them
+    # Approximate primitives in joint space
     plot_filepath_simplified_with_rdp = f"{SAVE_DIR}/trajectory_{timestamp}_simplified_with_rdp.png"
-    motion_sequence_msg = approx_LIN_primitives_with_rdp(fk_poses, epsilon=0.01, blend_radius=0.1, velocity=0.5, acceleration=0.5, plot_filepath=plot_filepath_simplified_with_rdp)
-
-    # extract poses from motion sequence message for visualization
-    all_poses = [
-        pose_stamped.pose
-        for primitive in motion_sequence_msg.motions
-        for pose_stamped in primitive.poses
-    ]
-
-    # publish poses to topic to visualize in RViz
-    publish_poses_to_rviz(
-        node=node,
-        poses=all_poses,
-        frame_id="base",
-        marker_ns="rdp_primitives",
-        axis_length=0.1,
-        axis_width=0.01
+    motion_sequence_msg = approx_PTP_primitives_with_rdp(
+        joint_positions=joint_positions,
+        joint_names=node.joint_names,
+        epsilon=0.01,
+        blend_radius=0.1,
+        velocity=0.5,
+        acceleration=0.5,
+        plot_filepath=plot_filepath_simplified_with_rdp
     )
 
-    # ask user if they want to continue with primitive execution
+    reduced_fk_poses = []
+
+    for primitive in motion_sequence_msg.motions:
+        if primitive.type != MotionPrimitive.LINEAR_JOINT:
+            continue  # nur PTP relevant
+
+        joint_vec = primitive.joint_positions
+        match_idx = next(
+            (i for i, jp in enumerate(joint_positions) if np.allclose(jp, joint_vec, atol=1e-5)),
+            None
+        )
+
+        if match_idx is not None:
+            pose = Pose()
+            pose = fk_poses[match_idx]
+            reduced_fk_poses.append(pose)
+        else:
+            print(f"[WARN] Kein FK-Match für Joint-Werte: {joint_vec}")
+
+    # Publish FK-Poses für reduzierte PTP-Punkte nach RViz
+    if reduced_fk_poses:
+        publish_poses_to_rviz(
+            node=node,
+            poses=reduced_fk_poses,
+            frame_id="base",
+            marker_ns="motion_primitive_goal_poses",
+            axis_length=0.1,
+            axis_width=0.01
+        )
+
+    # Nutzerabfrage vor Ausführung
     user_input = input("Do you want to continue with primitive execution? (Type yes): ").strip().lower()
     if user_input == 'yes':
         plt.close('all')
@@ -92,15 +119,13 @@ def main():
 
         motion_node = ExecuteMotionClient()
 
-        # save executed trajectory to CSV
         csv_filepath_executed_traj = f"{SAVE_DIR}/trajectory_{timestamp}_executed.csv"
         joint_state_logger = JointStateLogger(motion_node, csv_filepath_executed_traj)
 
-        # execute primitives with motion primitives forward controller
         motion_node.send_motion_sequence(motion_sequence_msg)
-        
+
         try:
-            rclpy.spin(motion_node)  # Wait until motion is done
+            rclpy.spin(motion_node)
         finally:
             joint_state_logger.stop()
     else:

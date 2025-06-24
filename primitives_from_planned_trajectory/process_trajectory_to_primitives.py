@@ -20,22 +20,22 @@ import rclpy
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-from .modules.planned_trajectory_reader import TrajectoryProcessor
-from .modules.fk_client import FKClient
-from .modules.csv_writer import write_to_csv
-from .modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
-from .modules.execute_motion_primitives import ExecuteMotionClient
-from .modules.joint_state_logger import JointStateLogger
-from .modules.marker_publisher import publish_poses_to_rviz
+# from .modules.planned_trajectory_reader import TrajectoryProcessor
+# from .modules.fk_client import FKClient
+# from .modules.csv_writer import write_to_csv
+# from .modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp
+# from .modules.execute_motion_primitives import ExecuteMotionClient
+# from .modules.joint_state_logger import JointStateLogger
+# from .modules.marker_publisher import publish_poses_to_rviz
 
 # To run with play button in VSCode instead of ros2 run
-# from modules.planned_trajectory_reader import TrajectoryProcessor
-# from modules.fk_client import FKClient
-# from modules.csv_writer import write_to_csv
-# from modules.approx_LIN_primitives_with_rdp import approx_LIN_primitives_with_rdp
-# from modules.execute_motion_primitives import ExecuteMotionClient
-# from modules.joint_state_logger import JointStateLogger
-# from modules.marker_publisher import publish_poses_to_rviz
+from modules.planned_trajectory_reader import TrajectoryProcessor
+from modules.fk_client import FKClient
+from modules.csv_writer import write_to_csv
+from modules.approx_primitives_with_rdp import approx_LIN_primitives_with_rdp
+from modules.execute_motion_primitives import ExecuteMotionClient
+from modules.joint_state_logger import JointStateLogger
+from modules.marker_publisher import publish_poses_to_rviz
 
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
@@ -79,7 +79,7 @@ def main():
         node=node,
         poses=all_poses,
         frame_id="base",
-        marker_ns="rdp_primitives",
+        marker_ns="motion_primitive_goal_poses",
         axis_length=0.1,
         axis_width=0.01
     )

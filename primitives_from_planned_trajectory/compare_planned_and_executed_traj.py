@@ -72,8 +72,8 @@ def compare_and_plot_trajectories(data_dir, filename_planned, filename_executed,
 
 def main():
     data_dir = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
-    filename_planned = 'trajectory_20250618_172406_planned.csv'
-    filename_executed = 'trajectory_20250618_172406_executed.csv'
+    filename_planned = 'trajectory_20250624_102029_planned.csv'
+    filename_executed = 'trajectory_20250624_102029_executed.csv'
     joint_names = [
         'shoulder_pan_joint_pos', 'shoulder_lift_joint_pos', 'elbow_joint_pos',
         'wrist_1_joint_pos', 'wrist_2_joint_pos', 'wrist_3_joint_pos'

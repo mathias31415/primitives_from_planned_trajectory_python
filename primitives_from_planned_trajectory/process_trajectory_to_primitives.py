@@ -109,7 +109,15 @@ def main():
         print('No trajectory received. Exiting.')
         return
 
-    user_mode = input("Which motion type should be used?\n[1] PTP (default)\n[2] LIN\n(Cancel with Ctrl+C)\n").strip()
+    valid_inputs = {'1', '2'}
+    user_mode = ''
+
+    while user_mode not in valid_inputs:
+        user_mode = input("Which motion type should be used?\n[1] PTP (default)\n[2] LIN\n(Cancel with Ctrl+C)\n").strip()
+        if user_mode == '':
+            user_mode = '1'  # Default to PTP
+        elif user_mode not in valid_inputs:
+            print("Invalid input. Please enter '1' for PTP or '2' for LIN.")
 
     joint_positions = [list(point.positions) for point in node.trajectory_points]
     fk_client = FKClient(node)

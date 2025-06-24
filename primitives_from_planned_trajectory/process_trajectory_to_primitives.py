@@ -40,6 +40,8 @@ from modules.execute_motion_primitives import ExecuteMotionClient
 from modules.joint_state_logger import JointStateLogger
 from modules.marker_publisher import publish_poses_to_rviz
 
+from compare_planned_and_executed_traj import compare_and_plot_trajectories
+
 SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
 
 
@@ -154,6 +156,11 @@ def main():
                 rclpy.spin(motion_node)
             finally:
                 joint_state_logger.stop()
+                
+                # compare planned and executed trajectories
+                joint_pos_names = [name + '_pos' for name in node.joint_names]
+                compare_and_plot_trajectories(filepath_planned=csv_filepath_planned_traj, filepath_executed=csv_filepath_executed_traj, joint_pos_names=joint_pos_names, n_points=100)
+
             break
 
         elif user_input in ('', 'n', 'no'):

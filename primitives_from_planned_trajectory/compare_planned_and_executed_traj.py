@@ -22,10 +22,10 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import os
 
-def compare_and_plot_trajectories(data_dir, filename_planned, filename_executed, joint_names, n_points):
+def compare_and_plot_trajectories(filepath_planned, filepath_executed, joint_pos_names, n_points):
     # Load CSV files
-    df_planned = pd.read_csv(os.path.join(data_dir, filename_planned))
-    df_executed = pd.read_csv(os.path.join(data_dir, filename_executed))
+    df_planned = pd.read_csv(filepath_planned)
+    df_executed = pd.read_csv(filepath_executed)
 
     # Remove leading/trailing rows where all velocities are zero
     vel_cols = [col for col in df_executed.columns if 'vel' in col]
@@ -35,25 +35,25 @@ def compare_and_plot_trajectories(data_dir, filename_planned, filename_executed,
     df_executed_clean = df_executed.loc[start_index:end_index].reset_index(drop=True)
 
     # Resample planned trajectory
-    planned_positions = df_planned[joint_names].values
+    planned_positions = df_planned[joint_pos_names].values
     interp_planned = interp1d(np.linspace(0, 1, len(planned_positions)), planned_positions, axis=0)
     planned_resampled = interp_planned(np.linspace(0, 1, n_points))
 
     # Resample executed trajectory
-    executed_positions = df_executed_clean[joint_names].values
+    executed_positions = df_executed_clean[joint_pos_names].values
     interp_executed = interp1d(np.linspace(0, 1, len(executed_positions)), executed_positions, axis=0)
     executed_resampled = interp_executed(np.linspace(0, 1, n_points))
 
     # Compute RMSE per joint and total
     rmse = np.sqrt(np.mean((planned_resampled - executed_resampled) ** 2, axis=0))
     total_rmse = np.sqrt(np.mean((planned_resampled - executed_resampled) ** 2))
-    print(f'Total RMSE: {total_rmse:.6f}')
+    print(f'Total RMSE of planned and executed trajectory: {total_rmse:.6f}')
 
     # Plot
     fig, axes = plt.subplots(3, 2, figsize=(12, 10))
     axes = axes.ravel()
 
-    for i, joint in enumerate(joint_names):
+    for i, joint in enumerate(joint_pos_names):
         axes[i].plot(planned_resampled[:, i], 'o--', color='blue', label='Planned', markersize=2)
         axes[i].plot(executed_resampled[:, i], 'o-', color='red', label='Executed', markersize=2)
         axes[i].set_title(f'{joint} (RMSE: {rmse[i]:.4f})')
@@ -63,24 +63,27 @@ def compare_and_plot_trajectories(data_dir, filename_planned, filename_executed,
         axes[i].grid(True)
         axes[i].legend()
 
-    plot_filename = filename_planned.replace('_planned.csv', '_compare_planned_vs_executed.png')
-    plot_path = os.path.join(data_dir, plot_filename)
+    # Save figure
+    base_name = os.path.basename(filepath_planned).replace('_planned.csv', '_compare_planned_vs_executed.png')
+    plot_path = os.path.join(os.path.dirname(filepath_planned), base_name)
     plt.tight_layout()
     plt.savefig(plot_path)
     plt.show()
-    print(f"Figure saved to: {plot_path}")
+    print(f"Figure with comparison saved to: {plot_path}")
 
 def main():
     data_dir = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
     filename_planned = 'trajectory_20250624_102029_planned.csv'
     filename_executed = 'trajectory_20250624_102029_executed.csv'
-    joint_names = [
+    filepath_planned = os.path.join(data_dir, filename_planned)
+    filepath_executed = os.path.join(data_dir, filename_executed)
+    joint_pos_names = [
         'shoulder_pan_joint_pos', 'shoulder_lift_joint_pos', 'elbow_joint_pos',
         'wrist_1_joint_pos', 'wrist_2_joint_pos', 'wrist_3_joint_pos'
     ]
     n_points = 100
 
-    compare_and_plot_trajectories(data_dir, filename_planned, filename_executed, joint_names, n_points)
+    compare_and_plot_trajectories(filepath_planned, filepath_executed, joint_pos_names, n_points)
 
 if __name__ == "__main__":
     main()

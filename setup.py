@@ -29,6 +29,7 @@ setup(
             'process_trajectory_to_primitives = primitives_from_planned_trajectory.process_trajectory_to_primitives:main',
             'plot_saved_planned_trajectory = primitives_from_planned_trajectory.plot_saved_planned_trajectory:main',
             'plot_saved_executed_trajectory = primitives_from_planned_trajectory.plot_saved_executed_trajectory:main',
+            'compare_planned_and_executed_traj = primitives_from_planned_trajectory.compare_planned_and_executed_traj:main',
         ],
     },
 )

@@ -52,3 +52,8 @@ ros2 run primitives_from_planned_trajectory plot_saved_planned_trajectory "<file
 ros2 run primitives_from_planned_trajectory plot_saved_executed_trajectory "<filename>"
 ```
 (The filename can either be passed as a command line argument or specified directly in the Python script.)
+
+## Compare planned and executed trajectory
+```
+ros2 run primitives_from_planned_trajectory compare_planned_and_executed_traj
+```

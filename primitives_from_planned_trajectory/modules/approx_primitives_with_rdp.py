@@ -27,7 +27,7 @@ from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionSequen
 
 def approx_LIN_primitives_with_rdp(poses_list, epsilon=0.01, blend_radius=0.0, velocity=0.01, acceleration=0.01, plot_filepath=None):
     """
-    Approximates motion primitives from Cartesian poses using RDP.
+    Approximates motion primitives from Cartesian poses using Ramer-Douglas-Peucker Algorithm (RDP).
     Also plots the original vs. reduced path in 3D.
 
     Args:

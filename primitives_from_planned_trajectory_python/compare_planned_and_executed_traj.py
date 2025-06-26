@@ -72,7 +72,7 @@ def compare_and_plot_trajectories(filepath_planned, filepath_executed, joint_pos
     print(f"Figure with comparison saved to: {plot_path}")
 
 def main():
-    data_dir = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
+    data_dir = 'src/primitives_from_planned_trajectory_python/data/saved_trajectories'
     filename_planned = 'trajectory_20250624_102029_planned.csv'
     filename_executed = 'trajectory_20250624_102029_executed.csv'
     filepath_planned = os.path.join(data_dir, filename_planned)

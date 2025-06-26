@@ -43,7 +43,7 @@ from .compare_planned_and_executed_traj import compare_and_plot_trajectories
 # from modules.marker_publisher import publish_pose_markers_to_rviz, delete_pose_markers
 # from compare_planned_and_executed_traj import compare_and_plot_trajectories
 
-SAVE_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
+SAVE_DIR = 'src/primitives_from_planned_trajectory_python/data/saved_trajectories'
 
 
 def compute_fk_for_joint_positions(fk_client, joint_names, joint_positions):
@@ -54,7 +54,7 @@ def handle_ptp_approximation(joint_positions, joint_names, fk_poses, plot_path):
     motion_sequence_msg = approx_PTP_primitives_with_rdp(
         joint_positions=joint_positions,
         joint_names=joint_names,
-        epsilon=0.001,
+        epsilon=0.01,
         blend_radius=0.1,
         velocity=0.5,
         acceleration=0.5,

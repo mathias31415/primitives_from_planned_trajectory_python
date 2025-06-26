@@ -1,4 +1,4 @@
-primitives_from_planned_trajectory
+primitives_from_planned_trajectory_python
 ==========================================
 
 Package to approximate a planned trajectory using motion primitives such as PTP, LIN, and CIRC
@@ -29,13 +29,13 @@ ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur10e launch_rviz:=tru
 ## Process planned trajectory
 Start the python script with the following command:
 ```
-ros2 run primitives_from_planned_trajectory process_trajectory_to_primitives
+ros2 run primitives_from_planned_trajectory_python process_trajectory_to_primitives
 ```
 Then plan a trajectory in RViz with MoveIt by pressing `plan`. The python script will:
     1. Read the planned trajectory from `/display_planned_path`.
     2. Calculate the endefector pose for every point in the trajectory using the `/compute_fk` service.
     3. Save the trajectory and endefector poses to a `trajectory_<date>_<time>_planned.csv` file.
-    4. Ask user if path should get approximated wit PTP or LIN Motion Primitives.
+    4. Ask user if path should get approximated with PTP or LIN Motion Primitives.
     5. Approximate the path with motion primitives using using Ramer-Douglas-Peucker Algorithm (RDP). For PTP in joint-space, for LIN in cartesian-space.
     6. Plot the trajectory vs the aproximated motion primitives path.
     7. Publish Goal-Poses of the Motion Primitives to `/visualization_marker_array` topic to visualize in RViz using MarkerArray
@@ -47,17 +47,17 @@ Then plan a trajectory in RViz with MoveIt by pressing `plan`. The python script
 
 ## Plot saved planned trajectory
 ```
-ros2 run primitives_from_planned_trajectory plot_saved_planned_trajectory "<filename>"
+ros2 run primitives_from_planned_trajectory_python plot_saved_planned_trajectory "<filename>"
 ```
 (The filename can either be passed as a command line argument or specified directly in the Python script.)
 
 ## Plot saved executed trajectory
 ```
-ros2 run primitives_from_planned_trajectory plot_saved_executed_trajectory "<filename>"
+ros2 run primitives_from_planned_trajectory_python plot_saved_executed_trajectory "<filename>"
 ```
 (The filename can either be passed as a command line argument or specified directly in the Python script.)
 
 ## Compare planned and executed trajectory
 ```
-ros2 run primitives_from_planned_trajectory compare_planned_and_executed_traj
+ros2 run primitives_from_planned_trajectory_python compare_planned_and_executed_traj
 ```

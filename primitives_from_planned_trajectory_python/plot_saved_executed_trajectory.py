@@ -23,7 +23,7 @@ import os
 import sys
 
 # Default path and filename (used if no CLI argument is given)
-DEFAULT_DIR = 'src/primitives_from_planned_trajectory/data/saved_trajectories'
+DEFAULT_DIR = 'src/primitives_from_planned_trajectory_python/data/saved_trajectories'
 DEFAULT_FILENAME = 'trajectory_20250617_153137_executed.csv'
 
 def load_trajectory_csv(filepath):

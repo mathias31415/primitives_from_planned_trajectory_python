@@ -32,10 +32,10 @@ class ExecuteMotionClient(Node):
         super().__init__("motion_sequence_client")
 
         self._client = ActionClient(
-            self, ExecuteMotion, "/motion_primitive_controller/motion_sequence"
+            self, ExecuteMotion, "/motion_primitive_forward_controller/motion_sequence"
         )
         self._cancel_client = self.create_client(
-            CancelGoal, "/motion_primitive_controller/motion_sequence/_action/cancel_goal"
+            CancelGoal, "/motion_primitive_forward_controller/motion_sequence/_action/cancel_goal"
         )
 
         self._goal_id = None  # goal_id for cancel request
